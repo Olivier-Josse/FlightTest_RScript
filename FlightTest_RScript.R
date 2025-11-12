@@ -564,50 +564,243 @@ label_p <- function(p) {
   else "n.s."
 }
 
-# Create the plot with comparison lines for Cond1/2 and Cond2/3
+# Create the graph with comparison lines for Cond1/2 and Cond2/3
+annot_data <- data.frame(
+  x = c(1.5, 2.5),                           # positions of significance between conditions
+  y = c(1.02, 1.02),                         # height of the annotations
+  label = c(label_p(p_val12), label_p(p_val23)))
+annot_data$vjust <- ifelse(annot_data$label == "ns", -0.4, 0) # Add a specific offset column: ns slightly higher # ↑ only moves the "ns"
 ggplot(graph_data, aes(x = Condition, y = Pourcentage, fill = Section)) +
   geom_bar(stat = "identity", position = "fill") +
-  labs(title = "Drosophila Distribution by Zone and Condition", y = "Percentage", fill = "Section") +
+  labs(title = "Répartition des Drosophiles par Zone et Condition", y = "Pourcentage", fill = "Section") +
   scale_y_continuous(labels = scales::percent, expand = expansion(mult = c(0, 0.15))) +
   theme_minimal() +
   theme(axis.title.x = element_blank(),
         axis.text.x = element_text(size = 12),
         axis.ticks.x = element_blank()) +
-  # Annotation Cond1 vs Cond2
+  # Annotation cond1 vs cond2 Horizontal and vertical lines
   geom_segment(aes(x = 1, xend = 2, y = 1.02, yend = 1.02)) +
   geom_segment(aes(x = 1, xend = 1, y = 1.00, yend = 1.02)) +
   geom_segment(aes(x = 2, xend = 2, y = 1.00, yend = 1.02)) +
-  annotate("text", x = 1.5, y = 1.05, label = label_p(p_val12), size = 6) +
-  # Annotation Cond2 vs Cond3
+  annotate("text", x = 1.5, y = 1.05, label = label_p(p_val12), size = 14) +
+  # Annotation cond2 vs cond3
   geom_segment(aes(x = 2, xend = 3, y = 1.02, yend = 1.02)) +
   geom_segment(aes(x = 2, xend = 2, y = 1.00, yend = 1.02)) +
   geom_segment(aes(x = 3, xend = 3, y = 1.00, yend = 1.02)) +
-  annotate("text", x = 2.5, y = 1.05, label = label_p(p_val23), size = 6)
+  annotate("text", x = 2.5, y = 1.05, label = label_p(p_val23), size = 14) # Significance annotation
 
-### Save the plot in high resolution (300 dpi or more) ###
+### Save the two graphs (simplified graph + Image and simplified graph) in high resolution (300 or more) ###
 
-# Set output file
-png("Comparison_of_Drosophila_Distribution_in_Tubes.png", width = 2000, height = 2000, res = 300)
-# Reproduce the plot code here
+# Define output file
+png("Comparaison de la répartition des drosophiles dans les tubes.png", width = 5000, height = 7000, res = 600)
+# Data for significance annotations and positions
+annot_data <- data.frame(
+  x = c(1.5, 2.5),                           # positions of significance between conditions
+  y = c(1.02, 1.02),                         # height of the annotations
+  label = c(label_p(p_val12), label_p(p_val23)))
+annot_data$vjust <- ifelse(annot_data$label == "ns", -0.4, 0) # Add a specific offset column: ns slightly higher # ↑ only moves the "ns"
+# Reproduce your graph code here
 ggplot(graph_data, aes(x = Condition, y = Pourcentage, fill = Section)) +
   geom_bar(stat = "identity", position = "fill") +
-  labs(title = "Drosophila Distribution by Zone and Condition", y = "Percentage", fill = "Section") +
+  labs(title = "Répartition des Drosophiles par Zone et Condition", y = "Distribution of flies across tube sections", fill = "Section") +
+  scale_y_continuous(labels = scales::percent, expand = expansion(mult = c(0, 0.15))) +
+  theme_minimal() +
+  theme(
+    axis.title.x = element_blank(),
+    axis.text.x  = element_text(angle = 45, hjust = 1, size = 18), # Legend angle and size
+    axis.text.y  = element_text(size = 14), # enlarged Y-axis numbers
+    axis.title.y = element_text(size = 20, face = "bold", margin = margin(r = 15)),  # shifted Y-axis title
+    axis.ticks.x = element_blank(),
+    legend.text  = element_text(size = 18),
+    legend.title = element_text(size = 18, face = "bold"),
+    legend.key.size = unit(1.2, "cm"),   # enlarge legend squares
+    plot.title   = element_text(size = 20, face = "bold", hjust = 0.5)
+  ) +
+  # Annotation cond1 vs cond2
+  geom_segment(aes(x = 1, xend = 2, y = 1.02, yend = 1.02)) +
+  geom_segment(aes(x = 1, xend = 1, y = 1.00, yend = 1.02)) +
+  geom_segment(aes(x = 2, xend = 2, y = 1.00, yend = 1.02)) +
+  # Annotation cond2 vs cond3
+  geom_segment(aes(x = 2, xend = 3, y = 1.02, yend = 1.02)) +
+  geom_segment(aes(x = 2, xend = 2, y = 1.00, yend = 1.02)) +
+  geom_segment(aes(x = 3, xend = 3, y = 1.00, yend = 1.02)) +
+  geom_text(
+    data = annot_data,
+    aes(x = x, y = y, label = label, vjust = vjust),
+    inherit.aes = FALSE,   # very important!
+    size = 18)             # uniform size between stars and ns        
+# Close the graphics device to save the file
+dev.off()
+
+######### Create a stacked % bar plot and comparison between the three conditions with Bottom and Ground combined #########
+
+# Create a dataset for the comparative plot
+graph_data <- data.frame(
+  Section = rep(c("Haut", "Milieu", "Bas", "Sol"), 3),
+  Pourcentage = c(top_percentage1, middle_percentage1, bottomground_percentage1,
+                  top_percentage2, middle_percentage2, bottomground_percentage2,
+                  top_percentage3, middle_percentage3, bottomground_percentage3),
+  Condition = rep(c("Control Uninjured", "Control Injured", "BnlRNAi Injured"), each = 4)
+)
+
+# Force the order of conditions in the plot (Uninjured on the left, Injured on the right)
+graph_data$Condition <- factor(graph_data$Condition,
+                               levels = c("Control Uninjured", "Control Injured", "BnlRNAi Injured"))
+
+# Reorder the sections to have "Haut" at the top, "Milieu" in the middle, "Bas" at the bottom
+graph_data$Section <- factor(graph_data$Section,
+                             levels = c("Haut", "Milieu", "Bas", "Sol"),
+                             labels = c("Top", "Middle", "Bottom", "Ground"))
+
+# Use ggplot2 to create a 100% stacked bar plot
+library(ggplot2)
+
+ggplot(graph_data, aes(x = Condition, y = Pourcentage, fill = Section)) +
+  geom_bar(stat = "identity", position = "fill") +  # position="fill" for 100% total
+  labs(title = "Drosophila Distribution by Zone and Condition", x = "Condition", y = "Percentage", fill = "Section") +
+  theme_minimal() +
+  scale_y_continuous(labels = scales::percent) +  # Display percentages
+  theme(axis.title.x = element_blank(), axis.text.x = element_text(size = 12), axis.ticks.x = element_blank())
+
+### Statistical tests (Chi2) to see differences between percentages ###
+
+## Cond1 vs Cond2
+
+# Build a contingency table with counts
+contingency_table12 <- matrix(
+  c(top_count1, middle_count1, bottomground_count1,
+    top_count2, middle_count2, bottomground_count2),
+  nrow = 2,
+  byrow = TRUE
+)
+colnames(contingency_table12) <- c("Haut", "Milieu", "Bas", "Sol")
+rownames(contingency_table12) <- c("Control Uninjured", "Control Injured")
+
+# Display the table
+print("Contingency Table:")
+print(contingency_table12)
+
+# Chi-squared test of independence
+chi2_result12 <- chisq.test(contingency_table12)
+
+# Test result
+print(chi2_result12)
+
+# If any count < 5, Fisher's test is more appropriate:
+if(any(contingency_table12 < 5)) {
+  fisher_result12 <- fisher.test(contingency_table12)
+  print("Fisher's Test (low counts):")
+  print(fisher_result12)
+}
+
+## Cond2 vs Cond3
+
+# Build a contingency table with counts
+contingency_table23 <- matrix(
+  c(top_count2, middle_count2, bottomground_count2,
+    top_count3, middle_count3, bottomground_count3),
+  nrow = 2, byrow = TRUE
+)
+colnames(contingency_table23) <- c("Haut", "Milieu", "Bas", "Sol")
+rownames(contingency_table23) <- c("Control Injured", "BnlRNAi Injured")
+
+# Display the table
+print("Contingency Table:")
+print(contingency_table23)
+
+# Chi-squared test of independence
+chi2_result23 <- chisq.test(contingency_table23)
+
+# Test result
+print(chi2_result23)
+
+# If any count < 5, Fisher's test is more appropriate:
+if(any(contingency_table23 < 5)) {
+  fisher_result23 <- fisher.test(contingency_table23)
+  print("Fisher's Test (low counts):")
+  print(fisher_result23)
+}
+
+### Add statistical results to ggplot ###
+
+# Chi2 test results
+p_val12 <- chi2_result12$p.value
+p_val23 <- chi2_result23$p.value
+
+# Convert p-value to annotation
+label_p <- function(p) {
+  if (p < 0.001) "***"
+  else if (p < 0.01) "**"
+  else if (p < 0.05) "*"
+  else "n.s."
+}
+
+# Create the graph with comparison lines for Cond1/2 and Cond2/3
+annot_data <- data.frame(
+  x = c(1.5, 2.5),                           # positions of significance between conditions
+  y = c(1.02, 1.02),                         # height of the annotations
+  label = c(label_p(p_val12), label_p(p_val23)))
+annot_data$vjust <- ifelse(annot_data$label == "ns", -0.4, 0) # Add a specific offset column: ns slightly higher # ↑ only moves the "ns"
+ggplot(graph_data, aes(x = Condition, y = Pourcentage, fill = Section)) +
+  geom_bar(stat = "identity", position = "fill") +
+  labs(title = "Répartition des Drosophiles par Zone et Condition", y = "Pourcentage", fill = "Section") +
   scale_y_continuous(labels = scales::percent, expand = expansion(mult = c(0, 0.15))) +
   theme_minimal() +
   theme(axis.title.x = element_blank(),
         axis.text.x = element_text(size = 12),
         axis.ticks.x = element_blank()) +
-  # Annotation Cond1 vs Cond2
+  # Annotation cond1 vs cond2 Horizontal and vertical lines
   geom_segment(aes(x = 1, xend = 2, y = 1.02, yend = 1.02)) +
   geom_segment(aes(x = 1, xend = 1, y = 1.00, yend = 1.02)) +
   geom_segment(aes(x = 2, xend = 2, y = 1.00, yend = 1.02)) +
-  annotate("text", x = 1.5, y = 1.05, label = label_p(p_val12), size = 6) +
-  # Annotation Cond2 vs Cond3
+  annotate("text", x = 1.5, y = 1.05, label = label_p(p_val12), size = 14) +
+  # Annotation cond2 vs cond3
   geom_segment(aes(x = 2, xend = 3, y = 1.02, yend = 1.02)) +
   geom_segment(aes(x = 2, xend = 2, y = 1.00, yend = 1.02)) +
   geom_segment(aes(x = 3, xend = 3, y = 1.00, yend = 1.02)) +
-  annotate("text", x = 2.5, y = 1.05, label = label_p(p_val23), size = 6)
-# Close the graphic device to save the file
+  annotate("text", x = 2.5, y = 1.05, label = label_p(p_val23), size = 14) # Significance annotation
+
+### Save the two graphs (simplified graph + Image and simplified graph) in high resolution (300 or more) ###
+
+# Define output file
+png("Comparaison de la répartition des drosophiles dans les tubes.png", width = 5000, height = 7000, res = 600)
+# Data for significance annotations and positions
+annot_data <- data.frame(
+  x = c(1.5, 2.5),                           # positions of significance between conditions
+  y = c(1.02, 1.02),                         # height of the annotations
+  label = c(label_p(p_val12), label_p(p_val23)))
+annot_data$vjust <- ifelse(annot_data$label == "ns", -0.4, 0) # Add a specific offset column: ns slightly higher # ↑ only moves the "ns"
+# Reproduce your graph code here
+ggplot(graph_data, aes(x = Condition, y = Pourcentage, fill = Section)) +
+  geom_bar(stat = "identity", position = "fill") +
+  labs(title = "Répartition des Drosophiles par Zone et Condition", y = "Distribution of flies across tube sections", fill = "Section") +
+  scale_y_continuous(labels = scales::percent, expand = expansion(mult = c(0, 0.15))) +
+  theme_minimal() +
+  theme(
+    axis.title.x = element_blank(),
+    axis.text.x  = element_text(angle = 45, hjust = 1, size = 18), # Legend angle and size
+    axis.text.y  = element_text(size = 14), # enlarged Y-axis numbers
+    axis.title.y = element_text(size = 20, face = "bold", margin = margin(r = 15)),  # shifted Y-axis title
+    axis.ticks.x = element_blank(),
+    legend.text  = element_text(size = 18),
+    legend.title = element_text(size = 18, face = "bold"),
+    legend.key.size = unit(1.2, "cm"),   # enlarge legend squares
+    plot.title   = element_text(size = 20, face = "bold", hjust = 0.5)
+  ) +
+  # Annotation cond1 vs cond2
+  geom_segment(aes(x = 1, xend = 2, y = 1.02, yend = 1.02)) +
+  geom_segment(aes(x = 1, xend = 1, y = 1.00, yend = 1.02)) +
+  geom_segment(aes(x = 2, xend = 2, y = 1.00, yend = 1.02)) +
+  # Annotation cond2 vs cond3
+  geom_segment(aes(x = 2, xend = 3, y = 1.02, yend = 1.02)) +
+  geom_segment(aes(x = 2, xend = 2, y = 1.00, yend = 1.02)) +
+  geom_segment(aes(x = 3, xend = 3, y = 1.00, yend = 1.02)) +
+  geom_text(
+    data = annot_data,
+    aes(x = x, y = y, label = label, vjust = vjust),
+    inherit.aes = FALSE,   # very important!
+    size = 18)             # uniform size between stars and ns        
+# Close the graphics device to save the file
 dev.off()
 
      
