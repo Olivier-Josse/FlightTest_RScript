@@ -582,12 +582,15 @@ ggplot(graph_data, aes(x = Condition, y = Pourcentage, fill = Section)) +
   geom_segment(aes(x = 1, xend = 2, y = 1.02, yend = 1.02)) +
   geom_segment(aes(x = 1, xend = 1, y = 1.00, yend = 1.02)) +
   geom_segment(aes(x = 2, xend = 2, y = 1.00, yend = 1.02)) +
-  annotate("text", x = 1.5, y = 1.05, label = label_p(p_val12), size = 14) +
   # Annotation cond2 vs cond3
   geom_segment(aes(x = 2, xend = 3, y = 1.02, yend = 1.02)) +
   geom_segment(aes(x = 2, xend = 2, y = 1.00, yend = 1.02)) +
   geom_segment(aes(x = 3, xend = 3, y = 1.00, yend = 1.02)) +
-  annotate("text", x = 2.5, y = 1.05, label = label_p(p_val23), size = 14) # Significance annotation
+  geom_text(
+    data = annot_data,
+    aes(x = x, y = y, label = label, vjust = vjust),
+    inherit.aes = FALSE,   
+    size = 18)             
 
 ### Save the two graphs (simplified graph + Image and simplified graph) in high resolution (300 or more) ###
 
@@ -803,4 +806,4 @@ ggplot(graph_data, aes(x = Condition, y = Pourcentage, fill = Section)) +
 # Close the graphics device to save the file
 dev.off()
 
-     
+
